@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="./css/kendo.common-material.min.css">
+    <link rel="stylesheet" href="./css/kendo.material.min.css">
+    <link rel="stylesheet" href="./css/uikit.min.css">
+    <link rel="stylesheet" href="./css/style.css">
+    <title>Head Count Plan</title>
+    <script type="text/javascript" src="data/book-data.js"></script>
+    <script src="./js/jquery-2.1.4.min.js"></script>
+    <script src="./js/kendo.all.min.js"></script>
+    <script src="./js/uikit.min.js"></script>
+    <script src="./js/script.js"></script>
+</head>
+
+<style>
+    main {
+        margin-bottom: none;
+    }
+    #wrapper{
+        width: 90%;
+        margin: 0 auto;
+        display: flex;
+    }
+
+    #diagram {
+        height: 320px;
+    }
+
+    #diagram .k-layer {
+        /* width: 500px;
+        height: 300px; */
+    }
+    #sideBar {
+        height: auto;
+        width: 20%;
+        border: 1x solid;
+        /* background-color: #f24; */
+    }
+    #content {
+        width: 80%;
+        margin: auto;
+    }
+
+    #dateInfo {
+        width: 60%;
+        margin: 10px auto;
+        border: 1px solid;
+    }
+
+    #dateDetail {
+        border: 1px solid;
+        margin: 10px auto;
+        width: 60%;;
+        height: 87%;
+    }
+
+    #dateDetail table {
+        font-size: 26px;
+        margin: 0 auto;
+    }
+    svg {
+        width: 50%;
+    }
+    a {
+        line-height: 3rem;
+    }
+
+</style>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <h1 class="navbar-title text-center">Head Count Plan</h1>
+        </nav>
+    </header>
+    <main>
+        <div id="wrapper">
+            <div id="sideBar">
+                <div id="dateInfo">
+                    <h1 style="text-align: center; margin:0px;">2020年</h1>
+                    <h2 style="text-align: right; margin:0px;">
+                        <span id="dateInfoMonth"></span>月</h2>
+                </div>
+                <div id="dateDetail">
+                    <table>
+                        <tr>
+                            <td>
+                                <a id="1" onClick="monthEvent(this.id)">1月:</a>
+                            </td>
+                            <td>+0</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <a id="2" onClick="monthEvent(this.id)">2月:</a>
+                            </td>
+                            <td>-2</td>
+                        </tr>
+                        <tr>
+                            <td><a id="3" onClick="monthEvent(this.id)">3月:</a> </td>
+                            <td>+0</td>
+                        </tr>
+                        <tr>
+                            <td><a id="4" onClick="monthEvent(this.id)">4月:</a> </td>
+                            <td>-3</td>
+                        </tr>
+                        <tr>
+                            <td><a id="5" onClick="monthEvent(this.id)">5月:</a> </td>
+                            <td>+0</td>
+                        </tr>
+                        <tr>
+                            <td><a id="6" onClick="monthEvent(this.id)">6月:</a> </td>
+                            <td>+0</td>
+                        </tr>
+                        <tr>
+                            <td><a id="7" onClick="monthEvent(this.id)">7月:</a> </td>
+                            <td>+0</td>
+                        </tr>
+                        <tr>
+                            <td><a id="8" onClick="monthEvent(this.id)">8月:</a> </td>
+                            <td>-2</td>
+                        </tr>
+                        <tr>
+                            <td><a id="9" onClick="monthEvent(this.id)">9月:</a> </td>
+                            <td>-3</td>
+                        </tr>
+                        <tr>
+                            <td><a id="10" onClick="monthEvent(this.id)">10月:</a> </td>
+                            <td>-4</td>
+                        </tr>
+                        <tr>
+                            <td><a id="11" onClick="monthEvent(this.id)">11月:</a> </td>
+                            <td>+0</td>
+                        </tr>
+                        <tr>
+                            <td><a id="12" onClick="monthEvent(this.id)">12月:</a> </td>
+                            <td>-2</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div id="content">
+                <div id="diagram"></div>
+                <div id="grid"></div>
+            </div>
+        </div>
+    </main>
+    <footer>
+    </footer>
+
+    <script>
+
+        $(document).ready(function() {
+            // 資料足夠預設帶入系統時間(月份)
+            var defaultMonth = '1';
+            $('#dateInfoMonth').text(defaultMonth);
+            createDiagram();
+            $('svg').css("height",'100%');
+
+            $("#grid").kendoGrid({
+                dataSource: {
+                    data: totalData.filter(d => d.month == defaultMonth),
+                    pageSize: 20
+                },
+                height: 550,
+                sortable: true,
+                pageable: {
+                    input: true,
+                    numeric: false
+                },
+                dataBound: cellColor,
+                columns: [
+                    {
+                        field: "id",
+                        title: "項次",
+                        // format: "{0:c}",
+                        width: "80px"
+                    },
+                    {
+                        field: "name",
+                        title: "姓名",
+                        width: "130px"
+                    },
+                    {
+                        field: "category",
+                        title: "職別",
+                        width: "100px"
+                    },
+                    {
+                        field: "jobName",
+                        title: "職稱",
+                        width: "130px"
+                    },
+                    {
+                        field: "Fday",
+                        title: "到職日",
+                        width: "130px"
+                    },
+                    {
+                        field: "Lday",
+                        title: "離職日",
+                        width: "130px"
+                    },
+                    {
+                        field: "base",
+                        title: "基數",
+                        width: "80px"
+                    },
+                    {
+                        command: [{
+                            name: "Delete",
+                            iconClass: "k-icon k-i-delete",
+                            click: deleteMember
+                        }],
+                        width: "130px"
+                    },
+                    {
+                        hidden: true,
+                        field: "stauts",
+                        width: "130px"
+                    }
+                ]
+            });
+        });
+
+        var data = [{
+            department: "TDS",
+            id: 1,
+            m: 100,
+            mall: 100,
+            firstName: "TDS",
+            lastName: "Moreno",
+            title: "Team Lead",
+            colorScheme: "#1696d3",
+            items: [
+            {
+                department: "DC",
+                id: 2,
+                m:35,
+                mall:30,
+                firstName: "DC",
+                lastName: "Izquiedro",
+                title: "Senior Developer",
+                colorScheme: "#75be16",
+
+            },
+            {
+                department: "QAC",
+                id: 3,
+                m: 30,
+                mall:30,
+                firstName: "QAC",
+                lastName: "Roel",
+                title: "QA Engineer",
+                colorScheme: "#ee587b"
+            },
+            {
+                department: "MIS",
+                id: 4,
+                m:35,
+                mall:40,
+                firstName: "MIS",
+                lastName: "Brown",
+                title: "Design Lead",
+                colorScheme: "#ef6944"
+            }]
+        }];
+
+        var t = 1;
+
+        function visualTemplate(options) {
+
+            var dataviz = kendo.dataviz;
+            var g = new dataviz.diagram.Group();
+            var dataItem = options.dataItem;
+            var g2 = new dataviz.diagram.Group();
+
+            // var a = new dataviz.diagram.Rectangle({
+            //         width: 50,
+            //         height: 80,
+            //         stroke: {
+            //             width: 2,
+            //             color: '#blue'
+            //         }
+            //     });
+
+            // var b = new dataviz.diagram.Rectangle({
+            //     width: 80,
+            //     height: 80,
+            //     x: 60,
+            //     stroke: {
+            //         width: 2,
+            //         color: '#red'
+            //     }
+            // });
+
+            // g.append(a);
+            // g.append(b);
+
+            // 拉長方形框框
+            // 第一個、其餘
+            if (t == 1) {
+                g.append(new dataviz.diagram.Rectangle({
+                    width: 160,
+                    height: 80,
+                    stroke: {
+                        width: 0
+                    },
+                    fill: {
+                        gradient: {
+                            // type: "linear",
+                            stops: [{
+                                color: dataItem.colorScheme,
+                                offset: 0,
+                                opacity: 0.5
+                            }, {
+                                color: dataItem.colorScheme,
+                                offset: 1,
+                                opacity: 1
+                            }]
+                        }
+                    }
+                }));
+            } else {
+                g.append(new dataviz.diagram.Rectangle({
+                    width: 180,
+                    height: 100,
+                    stroke: {
+                        width: 0
+                    },
+                    fill: {
+                        gradient: {
+                            type: "linear",
+                            stops: [{
+                                color: dataItem.colorScheme,
+                                offset: 0,
+                                opacity: 0.5
+                            }, {
+                                color: dataItem.colorScheme,
+                                offset: 1,
+                                opacity: 1
+                            }]
+                        }
+                    }
+                }));
+            }
+
+            // 長方形框框裡面的文字
+            // 第一個、其餘
+
+            if (t == 1) {
+                g.append(new dataviz.diagram.TextBlock({
+                    text: dataItem.department,
+                    fontSize: 26,
+                    color: "#red",
+                    x: 65,
+                    y: 30,
+                }));
+            } else if (t == 4) {
+                // MIS
+                g.append(new dataviz.diagram.TextBlock({
+                    text: dataItem.department,
+                    fontSize: 26,
+                    x: 50,
+                    y: 30,
+                    fill: "#blue"
+                }));
+            } else {
+                // DC、QAC
+                g.append(new dataviz.diagram.TextBlock({
+                    text: dataItem.department,
+                    fontSize: 26,
+                    x: 65,
+                    y: 30,
+                    fill: "#blue"
+                }));
+                // g.append(new dataviz.diagram.TextBlock({
+                //     text: '這是第' + t + '個',
+                //     fontSize: 10,
+                //     x: 85,
+                //     y: 65,
+                //     fill: "#gray"
+                // }));
+            }
+
+            t++;
+            console.log(t);
+            console.log(g);
+            return g;
+        }
+
+        var misMemberShape;
+        function createDiagram() {
+            var Shape = kendo.dataviz.diagram.Shape;
+
+            // MIS 新增成員 &實到、應到人數
+            var addMisMemberShape = new Shape({
+                id: 'addMis',
+                x: 150,
+                y: 190,
+                width: 80,
+                height:50,
+                content: {
+                    text: "+ 新增成員"
+                },
+            });
+
+            misMemberShape = new Shape({
+                id: 'misNumber',
+                x: 150,
+                y: 240,
+                width: 80,
+                height:50,
+                content: {
+                    text: `${data[0].items[2].m} / ${data[0].items[2].mall}`
+                },
+            });
+
+            // QAC 新增成員 &實到、應到人數
+            var addQacMemberShape = new Shape({
+                id: 'addQac',
+                x: 380,
+                y: 190,
+                width: 80,
+                height:50,
+                content: {
+                    text: "+ 新增成員"
+                },
+            });
+
+            var qacMemberShape = new Shape({
+                id: 'qacNumber',
+                x: 380,
+                y: 240,
+                width: 80,
+                height:50,
+                content: {
+                    text: `${data[0].items[1].m} / ${data[0].items[1].mall}`
+                },
+            });
+
+            // DC 新增成員 &實到、應到人數
+            var addDcMemberShape = new Shape({
+                id: 'addDc',
+                x: 610,
+                y: 190,
+                width: 80,
+                height:50,
+                content: {
+                    text: "+ 新增成員"
+                },
+            });
+
+            var dcMemberShape = new Shape({
+                id: 'dcNumber',
+                x: 610,
+                y: 240,
+                width: 80,
+                height:50,
+                content: {
+                    text: `${data[0].items[0].m} / ${data[0].items[0].mall}`
+                },
+            });
+
+
+
+
+            $("#diagram").kendoDiagram({
+                dataSource: new kendo.data.HierarchicalDataSource({
+                    data: data,
+                    schema: {
+                        model: {
+                            children: "items"
+                        }
+                    }
+                }),
+                editable: {
+                    drag: false,
+                    resize: false
+                },
+                selectable: false,
+                layout: {
+                    type: "layered"
+                },
+                shapeDefaults: {
+                    visual: visualTemplate,
+                    editable: false,
+
+                },
+                connectionDefaults: {
+                    stroke: {
+                        color: "#979797",
+                        width: 2
+                    }
+                },
+                click: onClick,
+            });
+
+            var diagram = $("#diagram").getKendoDiagram();
+            diagram.bringIntoView(diagram.shapes);
+
+            diagram.addShape(addMisMemberShape);
+            diagram.addShape(misMemberShape);
+
+            diagram.addShape(addQacMemberShape);
+            diagram.addShape(qacMemberShape);
+
+            diagram.addShape(addDcMemberShape);
+            diagram.addShape(dcMemberShape);
+        }
+
+        // To: 解決案到 應到時到人數的Shape
+        function onClick(e) {
+            debugger;
+            var de = $('#dateInfoMonth').text();
+
+            if (e.item.id == 'addMis') {
+                addMember('MIS');
+                alert('MIS新增成員!');
+            } else if (e.item.id == 'addQac') {
+                addMember('QAC');
+                alert('QAC新增成員!');
+            }else if (e.item.id == 'addDc') {
+                addMember('DC');
+                alert('DC新增成員!');
+            } else if (e.item.dataItem.id == 4) {
+                filterGridDataByDepartment(e.item.dataItem.department);
+                alert('MIS部門!');
+            } else if (e.item.dataItem.id == 3) {
+                filterGridDataByDepartment(e.item.dataItem.department);
+                alert('QAC部門!');
+            } else if (e.item.dataItem.id == 2) {
+                filterGridDataByDepartment(e.item.dataItem.department);
+                alert('DC部門!');
+            }
+        }
+
+        function filterGridDataByDepartment(department) {
+            var filterGrid = totalData.filter(d => d.department == department && d.month == $("#dateInfoMonth").text());
+            $("#grid").data("kendoGrid").dataSource.data(filterGrid);
+        }
+
+        function filterGridDataByMonth(month) {
+            var filterGrid = totalData.filter(d => d.month == month);
+            $("#grid").data("kendoGrid").dataSource.data(filterGrid);
+        }
+
+        function redraw(shapeIdx, department, m, mall) {
+            var shapeId;
+            if (department == "MIS") {
+                shapeId = "misNumber";
+                $("#diagram").data("kendoDiagram").shapes[shapeIdx].redraw({
+                    id: shapeId,
+                    x: 150,
+                    y: 240,
+                    width: 80,
+                    height:50,
+                    content: {
+                        text: `${m} / ${mall}`
+                    }
+                })
+            } else if (department == "QAC") {
+                shapeId = "qacNumber";
+                $("#diagram").data("kendoDiagram").shapes[shapeIdx].redraw({
+                    id: shapeId,
+                    x: 380,
+                    y: 240,
+                    width: 80,
+                    height:50,
+                    content: {
+                        text: `${m} / ${mall}`
+                    }
+                })
+            } else if (department == "DC") {
+                shapeId = "dcNumber";
+                $("#diagram").data("kendoDiagram").shapes[shapeIdx].redraw({
+                    id: shapeId,
+                    x: 610,
+                    y: 240,
+                    width: 80,
+                    height:50,
+                    content: {
+                        text: `${m} / ${mall}`
+                    }
+                })
+            }
+        }
+
+        function updateMonthNumber() {
+            var currentMonth = $("#dateInfoMonth").text();
+
+        }
+
+        function updateShapeData(department) {
+            var updatam = $("#diagram").data("kendoDiagram").dataSource.options.data[0].items.find(d => d.department == department).m +1;
+            $("#diagram").data("kendoDiagram").dataSource.options.data[0].items.find(d => d.department == department).m = updatam;
+            var mall = $("#diagram").data("kendoDiagram").dataSource.options.data[0].items.find(d => d.department == department).mall;
+            var shapeIdx = $("#diagram").data("kendoDiagram").shapes.findIndex(m=> m.id == department.toLocaleLowerCase()+"Number");
+            redraw(shapeIdx, department, updatam, mall);
+        }
+
+        // 0 => 新進、1 => 離開
+        function addMember(department) {
+            totalData.push({
+                id: Math.max(...totalData.map(item => item.id)) +1,
+                department,
+                name:`${department}${$('#dateInfoMonth').text()}月`,
+                category: 'engineer',
+                jobName: 'senior engineer',
+                Fday: '2020-01-01',
+                Lday: '2020-05-01',
+                base: '1',
+                month: $('#dateInfoMonth').text(),
+                status: 0
+            });
+            filterGridDataByDepartment(department);
+            updateShapeData(department);
+        }
+
+        function deleteMember(e) {
+            e.preventDefault();
+            // var tr = $(e.target).closest("tr");
+            // var data = this.dataItem(tr);
+            // data.css("background-color", "#f24");
+        }
+
+        function cellColor() {
+            // 找到本月新增的資料
+            var newMemberData = $("#grid").data("kendoGrid").dataSource.data().filter(m=> m.status == 0);
+            var leaveMemberData = $("#grid").data("kendoGrid").dataSource.data().filter(m=> m.status == 1);
+            var newMemberId = [];
+            // 取出本月新增資料的 id
+            newMemberData.forEach(e => {
+                newMemberId.push({
+                    id: e.id
+                });
+            });
+
+            var leaveMemberId = [];
+            // 取出本月新增資料的 id
+            leaveMemberData.forEach(e => {
+                leaveMemberId.push({
+                    id: e.id
+                });
+            });
+
+            var grid = $("#grid").data("kendoGrid");
+            var rows = grid.tbody.find("tr");
+            // 依照DOM物件去搜尋
+            rows.each(function (i, row) {
+                newMemberId.forEach(e => e.id == $(this).find("td").eq(0).text() && $(this).css("background-color", "#d1edb8"));
+                leaveMemberId.forEach(e => e.id == $(this).find("td").eq(0).text() && $(this).css("background-color", "#f24"));
+            });
+        }
+
+        var totalData = [
+            { id: 1, department:'MIS', name: 'MIS1月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '1'},
+            { id: 2, department:'MIS', name: 'MIS1月-進', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '1', status: 0},
+            { id: 13, department:'MIS', name: 'MIS1月-離', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '1', status: 1},
+            { id: 3, department:'MIS', name: 'MI2月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '2'},
+            { id: 4, department:'MIS', name: 'MIS3月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '3'},
+            { id: 5, department: "QAC", name: 'QAC1月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '1'},
+            { id: 6, department: "QAC", name: 'QAC2月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '2'},
+            { id: 7, department: "QAC", name: 'QAC3月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '3'},
+            { id: 8, department: "QAC", name: 'QAC3月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '3'},
+            { id: 9, department: 'DC', name: 'DC1月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '1'},
+            { id: 10,department: 'DC', name: 'DC2月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '2'},
+            { id: 11,department: 'DC', name: 'DC2月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '2'},
+            { id: 12,department: 'DC', name: 'DC3月', category: 'engineer', jobName: 'senior engineer', Fday: '2020-01-01', Lday: '2020-05-01', base: '1', month: '3'},
+        ];
+
+        function monthEvent(m) {
+            if (m == '1') {
+                filterGridDataByMonth(m);
+                $("#dateInfoMonth").text(m);
+            } else if (m == '2') {
+                filterGridDataByMonth(m);
+                $("#dateInfoMonth").text(m);
+            } else if (m == '3') {
+                filterGridDataByMonth(m);
+                $("#dateInfoMonth").text(m);
+            }
+        }
+    </script>
+</body>
+
+</html>
